@@ -13,7 +13,7 @@ import java.util.*;
  * 
  * @author marcoshung
  * @version 1.00
- * 
+ *  imported base code from hw2
  */
 public class MyCalendarTester {
 	static Scanner console = new Scanner(System.in);

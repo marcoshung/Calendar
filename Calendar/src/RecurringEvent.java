@@ -3,7 +3,7 @@ import java.time.LocalDateTime;
 /**
  * 
  * @author marcoshung
- *
+ * imported base code from hw2
  */
 public class RecurringEvent extends Event{
 	private String occurringDays;

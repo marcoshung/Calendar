@@ -10,7 +10,7 @@ import java.util.*;
 /**
  * 
  * @author marcoshung
- *
+ * imported base code from hw2
  */
 public class MyCalendar {
 	private HashSet<Event> allEvents;

@@ -2,7 +2,7 @@ import java.time.LocalDateTime;
 /**
  * 
  * @author marcoshung
- *
+ * imported base code from hw2
  */
 public class TimeInterval {
 	LocalDateTime startingTime;
