@@ -23,6 +23,8 @@ public class MyCalendar {
 	private Scanner console = new Scanner(System.in);
 	private File eventFile = new File("events.txt");
 	private File outputFile = new File("output.txt");
+	private LocalDateTime current = LocalDateTime.now();
+
 	/**
 	 * Constructor - initializes all instance variables
 	 */
@@ -322,7 +324,6 @@ public class MyCalendar {
 			System.out.println("Not valid Input. Try Again");
 			input = console.nextLine().toLowerCase();
 		}
-		LocalDateTime current = LocalDateTime.now();
 		boolean done = false;
 		if(input.equals("d")) {
 			while(!done) {
@@ -722,15 +723,28 @@ public class MyCalendar {
 		return false;
 	}
 	
+	public String[] getDaysOfWeek() {
+		String[] daysOfWeek = {"Su","Mo", "Tu", "We", "Th", "Fr", "Sa"};
+		return daysOfWeek;
+	}
+	
 	/**
 	 * prints the header of the calendar with days of the week
 	 */
 	
 	public void printDaysOfWeek() {
-		String[] daysOfWeek = {"Su","Mo", "Tu", "We", "Th", "Fr", "Sa"};
+		String[] daysOfWeek = getDaysOfWeek();
 		for(int i = 0; i < 7; i++) {
 			System.out.printf("%3s",daysOfWeek[i]);
 		}
 		System.out.println();
+	}
+	
+	public Month getCurrentMonth() {
+		return this.current.getMonth();
+	}
+	
+	public int getCurrentYear() {
+		return this.current.getYear();
 	}
 }

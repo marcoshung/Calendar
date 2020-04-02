@@ -1,3 +1,5 @@
+import java.awt.Dimension;
+import java.awt.Frame;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -8,6 +10,8 @@ import java.io.IOException;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+
+import javax.swing.JFrame;
 
 /**
  * 
@@ -31,7 +35,15 @@ public class MyCalendarTester {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+		JFrame frame = new JFrame("Calendar");
+		CalendarGUI gui = new CalendarGUI(calendar);
+		CalendarPanel cp = new CalendarPanel(gui);
+		frame.add(cp);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	    frame.setPreferredSize(new Dimension(1000,1000));
+	    frame.pack();
+		frame.setVisible(true);
+
 		startMainMenu();
 	}
 	
