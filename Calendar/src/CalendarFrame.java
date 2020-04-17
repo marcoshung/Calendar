@@ -23,6 +23,11 @@ public class CalendarFrame extends JFrame implements ChangeListener, MouseListen
 	private MyCalendar model;
 	private CalendarGUI gui;
 	private CalendarPanel cp;
+	
+	/**
+	 * constructor. Builds the frame and adds components and panels to it
+	 * @param calendar model
+	 */
 	public CalendarFrame(MyCalendar calendar) {
 		super("Calendar");
 		this.model = calendar;
@@ -36,15 +41,21 @@ public class CalendarFrame extends JFrame implements ChangeListener, MouseListen
 		addMouseListener(this);
 	}
 	@Override
+	//repaints the view
 	public void stateChanged(ChangeEvent e) {
 		cp.repaint();
 	}
+	
 	@Override
+	
 	public void mouseClicked(MouseEvent e) {}
+	
+	//handles action when user clicks on the frame. Should only respond when a day box is clicked
 	@Override
 	public void mousePressed(MouseEvent e) {
 		HashMap<Rectangle2D, Integer> dayBoxes = gui.getDayBoxes();
-		Point clickLocation = new Point(e.getX(), (e.getY()));
+		//gets click location and adjusts for the title
+		Point clickLocation = new Point(e.getX(), (e.getY() - gui.getTitleHeight()/5));
 		
 		if(cp.getIsCalendarView()) {
 			//checks to see which box, if any, was clicked

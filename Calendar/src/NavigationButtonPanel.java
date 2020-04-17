@@ -4,7 +4,7 @@ import java.awt.Graphics2D;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
-
+//this is used to hold the previous and next button
 public class NavigationButtonPanel extends JPanel{
 	JButton prevButton;
 	JButton nextButton;
