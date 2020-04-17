@@ -1,28 +1,37 @@
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import javax.swing.event.*;
+
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 /**
  * 
  * @author marcoshung
- *
+ * imported base code from hw2
+ * This is the model for the GUI
  */
 public class MyCalendar {
 	private HashSet<Event> allEvents;
 	private HashSet<Event> recurringEvents;
 	private HashSet<Event> singleEvents;
 	private HashMap<LocalDate, ArrayList<Event>> events;
+	private ArrayList<ChangeListener> listeners;
 
 	private DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm");
 	private DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 	private Scanner console = new Scanner(System.in);
 	private File eventFile = new File("events.txt");
 	private File outputFile = new File("output.txt");
+	private LocalDateTime current = LocalDateTime.now();
+
 	/**
 	 * Constructor - initializes all instance variables
 	 */
@@ -31,6 +40,7 @@ public class MyCalendar {
 		allEvents = new HashSet<Event>();
 		recurringEvents = new HashSet<Event>();
 		singleEvents = new HashSet<Event>();
+		listeners = new ArrayList<ChangeListener>();
 	}
 	/**
 	 * Adds event to events list
@@ -44,27 +54,6 @@ public class MyCalendar {
 			events.get(e.getDate()).add(e);
 		}
 		allEvents.add(e);
-	}
-	
-	/**
-	 * prints events by single event or recurring events in ascending order
-	 */
-	void seeEventList() {
-		ArrayList<Event> singleEvents = getSortedEvents(getSingleEvents());
-		System.out.println("ONE TIME EVENTS");
-		for(Event e : singleEvents) {
-			System.out.println(e.getDate().getDayOfWeek() + " " + e.getDate().getMonth() + " " + e.getDate().getDayOfMonth() + ", " + e.getDate().getYear() + " " + e.getStartingTime() + "- " + e.getEndingTime() + " " + e.getName());
-		}
-		
-		System.out.println();
-		ArrayList<Event> recurringEvents = getSortedEvents(getRecurringEvents());
-		System.out.println("RECURRING EVENTS");
-		
-		for(Event e : recurringEvents) {
-			RecurringEvent re = (RecurringEvent) (e);
-			System.out.println(re.getName() + "\n" + re.getOccurringDays() +" " + re.getStartingTime() + " " + re.getEndingTime() +" " + re.getStartDate() + " " +re.getEndDate());
-		}
-		System.out.println();
 	}
 	
 	/**
@@ -312,54 +301,6 @@ public class MyCalendar {
 	}
 	
 	/**
-	 * handles user interaction for the view use case
-	 */
-
-	public void view() {
-		System.out.println("[D]ay view or [M]onth view ?"); 
-		String input = console.nextLine().toLowerCase();
-		while(!input.equals("d") && !input.equals("m")) {
-			System.out.println("Not valid Input. Try Again");
-			input = console.nextLine().toLowerCase();
-		}
-		LocalDateTime current = LocalDateTime.now();
-		boolean done = false;
-		if(input.equals("d")) {
-			while(!done) {
-				System.out.println(current.getDayOfWeek() + ", " + current.getMonth() + " " + current.getDayOfMonth());
-				printDayEvents(current.toLocalDate());
-				System.out.println("[P]revious or [N]ext or [G]o back to the main menu ?");
-				input = console.nextLine().toLowerCase();
-				
-				if(input.equals("g")) {
-					done = true;
-				}else if(input.equals("p")) {
-					current = current.plusDays(-1);
-				}else if(input.equals("n")) {
-					current = current.plusDays(1);
-				}else {
-					System.out.println("Invalid input try again");
-				}
-			}
-		}else if(input.equals("m")) {
-			while(!done) {
-				printMonthEvents(current);
-				System.out.println("\n[P]revious or [N]ext or [G]o back to the main menu ?");
-				input = console.nextLine().toLowerCase();
-				if(input.equals("g")) {
-					done = true;
-				}else if(input.equals("p")) {
-					current = current.plusMonths(-1);
-				}else if(input.equals("n")) {
-					current = current.plusMonths(1);
-				}else {
-					System.out.println("Invalid input try again");
-				}
-			}
-		}
-	}
-	
-	/**
 	 * handles user interaction for the create use case
 	 */
 	
@@ -426,7 +367,7 @@ public class MyCalendar {
 			input = console.nextLine();
 		}
 		LocalDate date = LocalDate.parse(input,dateFormat);
-		printDayEvents(date);
+		//printDayEvents(date);
 		
 	}
 	
@@ -453,15 +394,13 @@ public class MyCalendar {
 	 */
 
 	public void printCalendar() {
-		LocalDateTime current = LocalDateTime.now();
 		Month month= current.getMonth();
 		int currentDayOfMonth = current.getDayOfMonth();
-		LocalDateTime firstDayOfMonth = current.withDayOfMonth(1);
 		
 		System.out.println(current.getMonth() + " " + current.getYear());
 		printDaysOfWeek();
-		int pos = firstDayOfMonth.getDayOfWeek().getValue();
-		setWeekPosition(firstDayOfMonth.getDayOfWeek().getValue());
+		int pos = getFirstDayOfWeek();
+		setWeekPosition(pos);
 		for(int i = 1; i <= month.length(isLeapYear(current.getYear())); i ++) {
 			if(i == currentDayOfMonth) {
 				System.out.printf("[" + "%2s" + "]",i);
@@ -475,6 +414,16 @@ public class MyCalendar {
 			pos++;
 		}
 		System.out.println();
+	}
+	
+	/**
+	 * 
+	 * @return int representing the first day of of the week for the current month.
+	 */
+	public int getFirstDayOfWeek() {
+		LocalDateTime firstDayOfMonth = current.withDayOfMonth(1);
+		return firstDayOfMonth.getDayOfWeek().getValue();
+
 	}
 	
 	/**
@@ -544,9 +493,7 @@ public class MyCalendar {
 				}
 				
 			}else if(eventInfo.length == 3) { //one time event
-				Event e = createEvent(eventName, eventInfo[0], eventInfo[1], eventInfo[2]);
-				addSingleEvent(e);
-				
+				createEvent(eventName, eventInfo[0], eventInfo[1], eventInfo[2]);				
 			}else {
 				System.out.println("Invalid file information");
 			}
@@ -560,44 +507,20 @@ public class MyCalendar {
 	 * @param date
 	 */
 	
-	public void printDayEvents(LocalDate date) {
+	public ArrayList<String> getDayEvents(LocalDate date) {
+		ArrayList<String> results = new ArrayList<String>();
 		ArrayList<Event> events = getSortedEvents(getEventsOnDay(date));
 		if(!(events.size() == 0)) {
 			for(Event e: events) {
-				System.out.println(e.getName() + " " + e.getDate() + " " + e.getStartingTime() + "-" + e.getEndingTime());
+				results.add(e.getName() + " " + e.getDate() + " " + e.getStartingTime() + "-" + e.getEndingTime());
 			}
 		}else {
-			System.out.println("No events scheduled for today");
+			results.add("No events scheduled for today");
 		}
+		
+		return results;
 	}
 	
-	/**
-	 * prints a monthly calendar view with all days that have events highlighted with brackets
-	 * @param current - current Date
-	 */
-	
-	public void printMonthEvents(LocalDateTime current) {
-		System.out.println(current.getMonth() + " " + current.getYear());
-		printDaysOfWeek();
-		LocalDateTime firstDayOfMonth = current.withDayOfMonth(1);
-		
-		setWeekPosition(firstDayOfMonth.getDayOfWeek().getValue());
-		
-		int pos = firstDayOfMonth.getDayOfWeek().getValue();
-		HashSet<Integer> eventDays = getEventDaysForMonth(current.getMonthValue(), current.getYear());
-		
-		for(int i = 1; i <= current.getMonth().length(isLeapYear(current.getYear())); i ++) {
-			if(eventDays.contains(i)) {
-				System.out.printf("{%s}", i);
-			}else {
-				System.out.printf("%3s", i);
-			}	
-			if((pos + 1) % 7 == 0) {
-				System.out.println();
-			}
-			pos++;
-		}
-	}
 	
 	/**
 	 * @return values mapping to their respective days of the week
@@ -638,7 +561,7 @@ public class MyCalendar {
 		Event e = new Event(name, new TimeInterval(startingPoint, endingPoint));
 		for(Event event: getAllEvents()) {
 			if(e.hasConflict(event)) {
-				System.out.println(e.getName() +" will conflict with " + event.getName() + ". "  + e.getName() + " was not added");
+				ErrorFrame error = new ErrorFrame(e.getName() +" will conflict with " + event.getName() + ". "  + e.getName() + " was not added");
 				return null;
 			}
 		}
@@ -722,15 +645,68 @@ public class MyCalendar {
 		return false;
 	}
 	
+	public String[] getDaysOfWeek() {
+		String[] daysOfWeek = {"Su","Mo", "Tu", "We", "Th", "Fr", "Sa"};
+		return daysOfWeek;
+	}
+	
 	/**
 	 * prints the header of the calendar with days of the week
 	 */
 	
 	public void printDaysOfWeek() {
-		String[] daysOfWeek = {"Su","Mo", "Tu", "We", "Th", "Fr", "Sa"};
+		String[] daysOfWeek = getDaysOfWeek();
 		for(int i = 0; i < 7; i++) {
 			System.out.printf("%3s",daysOfWeek[i]);
 		}
 		System.out.println();
 	}
+	
+	public int getCurrentDay() {
+		return this.current.getDayOfMonth();
+	}
+	
+	public Month getCurrentMonth() {
+		return this.current.getMonth();
+	}
+	
+	public int getCurrentYear() {
+		return this.current.getYear();
+	}
+	
+	public void goToNextMonth() {
+		current = current.plusMonths(1);
+		executeStateChanges(new ChangeEvent(this));
+	}
+	
+	public void goToPrevMonth() {
+		current = current.plusMonths(-1);
+		executeStateChanges(new ChangeEvent(this));
+	}
+	
+	public void goToNextDay() {
+		current = current.plusDays(1);
+		executeStateChanges(new ChangeEvent(this));
+	}
+	
+	public void goToPrevDay() {
+		current = current.plusDays(-1);
+		executeStateChanges(new ChangeEvent(this));
+	}
+	
+	public void addChangeListener(ChangeListener listener) {
+		this.listeners.add(listener);
+	}
+	
+	private void executeStateChanges(ChangeEvent event) {
+		for(ChangeListener l:listeners) {
+			l.stateChanged(event);
+		}
+	}
+	
+	public void setCurrentDate(LocalDateTime newDate) {
+		this.current = newDate;
+	}
 }
+
+

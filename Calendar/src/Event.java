@@ -4,7 +4,7 @@ import java.time.LocalTime;
 /**
  * 
  * @author marcoshung
- *
+ * imported base code from hw2
  */
 public class Event {
 	private String name;
