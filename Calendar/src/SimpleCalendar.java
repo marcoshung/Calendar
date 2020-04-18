@@ -6,7 +6,7 @@ import java.io.IOException;
  *  imported base code from hw2 to serve as model for GUI
  */
 
-public class MyCalendarTester {
+public class SimpleCalendar {
 	/**
 	 * Main method
 	 * @param args
